@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+import re
+
 MEM_SIZE = 52428800  # 50 MB
 #MEM_SIZE = 50
+directive_re = re.compile("((?P<label>[a-zA-Z]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
+instruction_re = re.compile("^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+((?P<op_one>(R|r)\d)\s+(?P<op_two>#(-)?\d+|'.'|[A-Za-z0-9])|(?P<single_op>\d+))")
 
 
 def _twos(val, bits):
