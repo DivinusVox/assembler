@@ -12,6 +12,7 @@ class UndefinedLabelError(Exception): pass
 class UnknownInstructionError(Exception): pass
 class UnknownDirectiveError(Exception): pass
 
+
 def _twos(val, bits):
     if ((val&(1<<(bits-1))) != 0):
         val = val-(1<<bits)
@@ -68,7 +69,7 @@ class Assembler:
             line = line.strip()
             directive = directive_re.search(line)
             instruction = instruction_re.search(line)
-            if line:
+            if line and not line[0] == ';':
                 if directive and directive.groupdict()['type']:
                     result = directive.groupdict()
                     if result['label']:
@@ -89,7 +90,7 @@ class Assembler:
                                 str(line_number) + ': ' + label + ' -' + line)
                 else:
                     raise UnknownInstructionError(line_number, '-', line)
-                    
+
             self.pc = self.pc + 1
             line_number = line_number + 1
         print self.symbol_table
