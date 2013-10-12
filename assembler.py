@@ -7,6 +7,10 @@ directive_re = re.compile("((?P<label>[a-zA-Z]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(
 instruction_re = re.compile("^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+((?P<op_one>(R|r)\d)\s+(?P<op_two>#(-)?\d+|'.'|[A-Za-z0-9])|(?P<single_op>\d+))")
 
 
+class DuplicateLabelError(Exception): pass
+class UndefinedLabelError(Exception): pass
+
+
 def _twos(val, bits):
     if ((val&(1<<(bits-1))) != 0):
         val = val-(1<<bits)
@@ -46,3 +50,36 @@ class MemoryManager:
 
     def fetch_char(self, loc):
         return self.memory[loc]
+
+
+class Assembler:
+    symbol_table = dict()
+    pc = 0
+    source = None
+    code_space = 0
+
+    def read(self, filename):
+        self.source = open(filename, 'r')
+
+    def first_pass(self):
+        line_number = 1
+        for line in self.source:
+            print line
+            directive = directive_re.search(line)
+            print match.groupdict()
+            if directive:
+                result = direct.groupdict()
+                if result['label']:
+                    if symbol_table.get(result['label']):
+                        raise DuplicateLabelError("Line: " + line_number)
+                    else:
+                        symbol_table[result['label']] = {(self.pc, line_number)}
+            else:
+                pass
+            self.pc = self.pc + 1
+            line_number = line_number + 1
+
+
+
+class VirtualMachine:
+    pass
