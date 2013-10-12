@@ -3,8 +3,8 @@ import re
 
 MEM_SIZE = 52428800  # 50 MB
 #MEM_SIZE = 50
-directive_re = re.compile(r"((?P<label>[a-zA-Z]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+((?P<op_one>(R|r)\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+))|(?P<single_op>[a-zA-Z0-9]+))")
+directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+(((?P<single_lbl>[a-zA-Z0-9]+)|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 
 class DuplicateLabelError(Exception): pass
@@ -75,6 +75,7 @@ class Assembler:
                     if result['label']:
                         label = self.symbol_table.get(result['label'])
                         if label:
+                            import ipdb; ipdb.set_trace()
                             raise DuplicateLabelError(line_number, '-', line)
                         else:
                             self.symbol_table[result['label']] = (self.pc, [line_number])
@@ -89,6 +90,7 @@ class Assembler:
                             raise UndefinedLabelError(
                                 str(line_number) + ': ' + label + ' -' + line)
                 else:
+                    import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(line_number, '-', line)
 
             self.pc = self.pc + 1
