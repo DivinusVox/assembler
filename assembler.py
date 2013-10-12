@@ -3,13 +3,14 @@ import re
 
 MEM_SIZE = 52428800  # 50 MB
 #MEM_SIZE = 50
-directive_re = re.compile("((?P<label>[a-zA-Z]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile("^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+((?P<op_one>(R|r)\d)\s+(?P<op_two>#(-)?\d+|'.'|[A-Za-z0-9])|(?P<single_op>\d+))")
+directive_re = re.compile(r"((?P<label>[a-zA-Z]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+((?P<op_one>(R|r)\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+))|(?P<single_op>[a-zA-Z0-9]+))")
 
 
 class DuplicateLabelError(Exception): pass
 class UndefinedLabelError(Exception): pass
-
+class UnknownInstructionError(Exception): pass
+class UnknownDirectiveError(Exception): pass
 
 def _twos(val, bits):
     if ((val&(1<<(bits-1))) != 0):
@@ -64,21 +65,34 @@ class Assembler:
     def first_pass(self):
         line_number = 1
         for line in self.source:
-            print line
+            line = line.strip()
             directive = directive_re.search(line)
-            print match.groupdict()
-            if directive:
-                result = direct.groupdict()
-                if result['label']:
-                    if symbol_table.get(result['label']):
-                        raise DuplicateLabelError("Line: " + line_number)
-                    else:
-                        symbol_table[result['label']] = {(self.pc, line_number)}
-            else:
-                pass
+            instruction = instruction_re.search(line)
+            if line:
+                if directive and directive.groupdict()['type']:
+                    result = directive.groupdict()
+                    if result['label']:
+                        label = self.symbol_table.get(result['label'])
+                        if label:
+                            raise DuplicateLabelError(line_number, '-', line)
+                        else:
+                            self.symbol_table[result['label']] = (self.pc, [line_number])
+                elif instruction and instruction.groupdict()['instruction']:
+                    result = instruction.groupdict()
+                    label = result.get('op_label') or result.get('single_op')
+                    if label:
+                        try:
+                            self.symbol_table[label][1].append(line_number)
+                        except KeyError:
+                            import ipdb; ipdb.set_trace()
+                            raise UndefinedLabelError(
+                                str(line_number) + ': ' + label + ' -' + line)
+                else:
+                    raise UnknownInstructionError(line_number, '-', line)
+                    
             self.pc = self.pc + 1
             line_number = line_number + 1
-
+        print self.symbol_table
 
 
 class VirtualMachine:
