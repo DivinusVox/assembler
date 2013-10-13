@@ -4,7 +4,19 @@ import re
 MEM_SIZE = 52428800  # 50 MB
 #MEM_SIZE = 50
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{3})\s+(((?P<single_lbl>[a-zA-Z0-9]+)|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]+)|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+
+instruction_code = {
+    "TRP": 0,
+    "ADD": 1,
+    "ADI": 2,
+    "SUB": 3,
+    "MUL": 4,
+    "DIV": 5,
+    "AND": 6,
+    "OR" : 7,
+    "CMP": 8,
+}
 
 
 class DuplicateLabelError(Exception): pass
@@ -95,7 +107,9 @@ class Assembler:
 
             self.pc = self.pc + 1
             line_number = line_number + 1
-        print self.symbol_table
+
+    def second_pass(self):
+        
 
 
 class VirtualMachine:
