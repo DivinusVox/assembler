@@ -16,6 +16,18 @@ instruction_code = {
     "AND": 6,
     "OR" : 7,
     "CMP": 8,
+    "MOV": 9,
+    "LDA": 10,
+    "STR": 11,
+    "LDR": 12,
+    "STB": 13,
+    "LDB": 14,
+    "JMP": 15,
+    "JMR": 16,
+    "BNZ": 17,
+    "BGT": 18,
+    "BLT": 19,
+    "BRZ": 20
 }
 
 
