@@ -14,7 +14,7 @@ instruction_code = {
     "MUL": 4,
     "DIV": 5,
     "AND": 6,
-    "OR" : 7,
+    "OR": 7,
     "CMP": 8,
     "MOV": 9,
     "LDA": 10,
@@ -38,9 +38,9 @@ class UnknownDirectiveError(Exception): pass
 
 
 def _twos(val, bits):
-    if ((val&(1<<(bits-1))) != 0):
-        val = val-(1<<bits)
-    return val        
+    if ((val & (1 << (bits-1))) != 0):
+        val = val-(1 << bits)
+    return val
 
 
 def int_to_block(i):
@@ -70,7 +70,7 @@ class MemoryManager:
             bytes.append(self.memory[loc])
             loc = loc + 1
         return (_twos(block_to_bin(bytes), 32))
-        
+
     def store_char(self, c, loc):
         self.memory[loc] = c
 
@@ -87,6 +87,9 @@ class Assembler:
     def read(self, filename):
         self.source = open(filename, 'r')
 
+    def reset_source(self):
+        self.source.seek(0)
+
     def first_pass(self):
         line_number = 1
         for line in self.source:
@@ -100,7 +103,9 @@ class Assembler:
                         label = self.symbol_table.get(result['label'])
                         if label:
                             import ipdb; ipdb.set_trace()
-                            raise DuplicateLabelError(line_number, '-', line)
+                            raise DuplicateLabelError(
+                                'Line ' + str(line_number) +  ': ' +
+                                label + ' -' + line)
                         else:
                             self.symbol_table[result['label']] = (self.pc, [line_number])
                 elif instruction and instruction.groupdict()['instruction']:
@@ -112,16 +117,23 @@ class Assembler:
                         except KeyError:
                             import ipdb; ipdb.set_trace()
                             raise UndefinedLabelError(
-                                str(line_number) + ': ' + label + ' -' + line)
+                                'Line ' + str(line_number) + ': ' +
+                                label + ' -' + line)
                 else:
                     import ipdb; ipdb.set_trace()
-                    raise UnknownInstructionError(line_number, '-', line)
+                    raise UnknownInstructionError(
+                        'Line ' + str(line_number) + ': ' + line)
 
-            self.pc = self.pc + 1
+                # Not a comment, increment PC
+                self.pc = self.pc + 1
+
             line_number = line_number + 1
 
     def second_pass(self):
-        
+        self.reset_source()
+
+        for line in self.source:
+            print line
 
 
 class VirtualMachine:
