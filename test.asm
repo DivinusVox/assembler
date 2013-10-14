@@ -6,3 +6,4 @@ bar .byt 'n'
 
 LDR r1 foo
 ADD r1 #2
+TRP 1
