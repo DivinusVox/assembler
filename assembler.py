@@ -55,7 +55,6 @@ def int_to_block(i):
         a = ((i >> 24) & 0b11111111)
         return a, b, c, d
     except TypeError:
-        import ipdb; ipdb.set_trace()
         raise Exception
 
 
@@ -209,7 +208,6 @@ class Assembler:
                             try:
                                 op = self.symbol_table[result['single_lbl']]
                             except KeyError:
-                                import ipdb; ipdb.set_trace()
                                 raise UndefinedLabelError(
                                     'PC: ' + str(self.pc) +
                                     '. [' + result['single_lbl'] + ']')
@@ -225,20 +223,17 @@ class Assembler:
                                 try:
                                     op2 = self.symbol_table[result['op_label']][0]
                                 except KeyError:
-                                    import ipdb; ipdb.set_trace()
                                     raise UndefinedLabelError(
                                         'PC: ' + str(self.pc) +
                                         '. [' + result['single_lbl'] + ']')
                             self.memory.store_inst(
                                 self.pc, I_CODE[i], op1, op2)
                     except KeyError as e:
-                        import ipdb; ipdb.set_trace()
                         raise UnknownInstructionError('PC: ' + str(self.pc) +
                                                       '. ' + e.message)
 
                     self.pc = self.pc + pc_diff
                 else:
-                    import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(
                         'Line ' + str(line_number) + ': ' + line)
 
