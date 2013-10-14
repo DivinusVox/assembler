@@ -211,7 +211,7 @@ class Assembler:
                             except KeyError:
                                 import ipdb; ipdb.set_trace()
                                 raise UndefinedLabelError(
-                                    'PC: ' + str(self.pc) + 
+                                    'PC: ' + str(self.pc) +
                                     '. [' + result['single_lbl'] + ']')
                             self.memory.store_inst(self.pc, I_CODE[i], op)
                         else:
@@ -243,14 +243,14 @@ class Assembler:
                         'Line ' + str(line_number) + ': ' + line)
 
             line_number = line_number + 1
-                 
+
 
 class VirtualMachine:
     registers = []
     zero_flag = 0
     pc = 0
     memory = None
-    
+
     def TRP(self, code, na):
         options = {
             0: lambda : sys.exit(0), # fin.
@@ -278,7 +278,7 @@ class VirtualMachine:
             self.registers[x].fetch_int(0)-self.registers[y].fetch_int(0), 0)
 
     def MUL(self, x, y):
-        self.registers[x].store_int( 
+        self.registers[x].store_int(
             self.registers[x].fetch_int(0)*self.registers[y].fetch_int(0), 0)
 
     def DIV(self, x, y):
@@ -324,7 +324,7 @@ class VirtualMachine:
             12: self.LDR,
             13: self.STB,
             14: self.LDB
-        }    
+        }
 
     def process(self):
         i = self.memory.fetch_int(self.pc)
@@ -346,7 +346,7 @@ def main(*args, **kwargs):
     assembler.first_pass()
     assembler.second_pass()
     vm = VirtualMachine(assembler.memory, assembler.code_seg)
-    
+
     while True:
         vm.process()
 
