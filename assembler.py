@@ -1,33 +1,35 @@
 #! /usr/bin/env python
+from __future__ import print_function
 import re
+import sys
 
 MEM_SIZE = 52428800  # 50 MB
-#MEM_SIZE = 50
+#MEM_SIZE = 5000
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]+)|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<d_char>'.')|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]{2,})\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]{2,})))(\s*(;.*)?)?$")
 
-instruction_code = {
+I_CODE = {
     "TRP": 0,
     "ADD": 1,
     "ADI": 2,
     "SUB": 3,
     "MUL": 4,
     "DIV": 5,
-    "AND": 6,
-    "OR": 7,
-    "CMP": 8,
+    #"AND": 6,
+    #"OR": 7,
+    #"CMP": 8,
     "MOV": 9,
-    "LDA": 10,
+    #"LDA": 10,
     "STR": 11,
     "LDR": 12,
     "STB": 13,
     "LDB": 14,
-    "JMP": 15,
-    "JMR": 16,
-    "BNZ": 17,
-    "BGT": 18,
-    "BLT": 19,
-    "BRZ": 20
+    #"JMP": 15,
+    #"JMR": 16,
+    #"BNZ": 17,
+    #"BGT": 18,
+    #"BLT": 19,
+    #"BRZ": 20
 }
 
 
@@ -35,6 +37,8 @@ class DuplicateLabelError(Exception): pass
 class UndefinedLabelError(Exception): pass
 class UnknownInstructionError(Exception): pass
 class UnknownDirectiveError(Exception): pass
+class DirectiveInInstructionsError(Exception): pass
+class UnknownTrapError(Exception): pass
 
 
 def _twos(val, bits):
@@ -44,11 +48,15 @@ def _twos(val, bits):
 
 
 def int_to_block(i):
-    d = (i & 0b11111111)
-    c = ((i >> 8) & 0b11111111)
-    b = ((i >> 16) & 0b11111111)
-    a = ((i >> 24) & 0b11111111)
-    return a, b, c, d
+    try:
+        d = (i & 0b11111111)
+        c = ((i >> 8) & 0b11111111)
+        b = ((i >> 16) & 0b11111111)
+        a = ((i >> 24) & 0b11111111)
+        return a, b, c, d
+    except TypeError:
+        import ipdb; ipdb.set_trace()
+        raise Exception
 
 
 def block_to_bin(b):
@@ -56,13 +64,20 @@ def block_to_bin(b):
 
 
 class MemoryManager:
-    memory = bytearray(MEM_SIZE)
+    memory = None
+
+    def __init__(self, size=MEM_SIZE):
+        self.memory = bytearray(size)
+
+    def __repr__(self):
+        return str(self.memory)
 
     def store_int(self, i, loc):
         result = int_to_block(i)
         for byte in result:
             self.memory[loc] = byte
             loc = loc + 1
+        return loc
 
     def fetch_int(self, loc):
         bytes = []
@@ -71,18 +86,29 @@ class MemoryManager:
             loc = loc + 1
         return (_twos(block_to_bin(bytes), 32))
 
-    def store_char(self, c, loc):
-        self.memory[loc] = c
+    def store_char(self, ch, loc):
+        self.memory[loc] = ch
 
     def fetch_char(self, loc):
         return self.memory[loc]
 
+    def store_inst(self, loc, code, op1, op2=None):
+        self.store_int(code, loc)
+        self.store_int(op1, loc+4)
+        self.store_int(op2 or 0, loc+8)
+
+    def fetch_inst(self, loc):
+        i = self.fetch_int(loc)
+        o1 = self.fetch_int(loc+4)
+        o2 = self.fetch_int(loc+8)
+        return (i, o1, o2)
+
 
 class Assembler:
     symbol_table = dict()
+    memory = MemoryManager()
     pc = 0
     source = None
-    code_space = 0
 
     def read(self, filename):
         self.source = open(filename, 'r')
@@ -97,17 +123,20 @@ class Assembler:
             directive = directive_re.search(line)
             instruction = instruction_re.search(line)
             if line and not line[0] == ';':
+                pc_plus = 1
                 if directive and directive.groupdict()['type']:
                     result = directive.groupdict()
                     if result['label']:
                         label = self.symbol_table.get(result['label'])
                         if label:
-                            import ipdb; ipdb.set_trace()
                             raise DuplicateLabelError(
-                                'Line ' + str(line_number) +  ': ' +
-                                label + ' -' + line)
+                                'Line ' + str(line_number) +  ': [' +
+                                result['label'] + '] | ' + line)
                         else:
-                            self.symbol_table[result['label']] = (self.pc, [line_number])
+                            self.symbol_table[result['label']] = \
+                                (self.pc, [line_number])
+                            if result['type'] == '.INT':
+                                pc_plus = 4
                 elif instruction and instruction.groupdict()['instruction']:
                     result = instruction.groupdict()
                     label = result.get('op_label') or result.get('single_op')
@@ -115,26 +144,211 @@ class Assembler:
                         try:
                             self.symbol_table[label][1].append(line_number)
                         except KeyError:
-                            import ipdb; ipdb.set_trace()
                             raise UndefinedLabelError(
-                                'Line ' + str(line_number) + ': ' +
-                                label + ' -' + line)
+                                'Line ' + str(line_number) + ': [' +
+                                label + '] | ' + line)
                 else:
-                    import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(
                         'Line ' + str(line_number) + ': ' + line)
 
                 # Not a comment, increment PC
-                self.pc = self.pc + 1
+                self.pc = self.pc + pc_plus
 
             line_number = line_number + 1
 
     def second_pass(self):
         self.reset_source()
+        self.pc = 0
+        line_number = 1
+        self.code_seg = None
+
+        def store_int(val):
+            self.memory.store_int(int(val), self.pc)
+            self.pc = self.pc + 4
+
+        def store_char(val):
+            if val == "'\\n'":
+                val = val.replace('\\n', '\n')
+            self.memory.store_char(val.replace("'", ""), self.pc)
+            self.pc = self.pc + 1
+
+        ACTIONS = {
+            '.INT': store_int,
+            '.BYT': store_char
+        }
 
         for line in self.source:
-            print line
+            line = line.strip()
+            directive = directive_re.search(line)
+            instruction = instruction_re.search(line)
+            if line and not line[0] == ';':
+                if directive and directive.groupdict()['type']:
+                    pc_diff = 1
+                    if self.code_seg is not None:
+                        raise DirectiveInInstructionsError(
+                            'Line ' + str(line_number) + ': ' + line)
+                    result = directive.groupdict()
+                    try:
+                        ACTIONS[result['type'].upper()](result['value'])
+                    except KeyError:
+                        raise UnknownDirectiveError(
+                        'Line ' + str(line_number) + ': [' + result['type'] +
+                        '] ' + line);
+                elif instruction and instruction.groupdict()['instruction']:
+                    if self.code_seg is None:
+                        self.code_seg = self.pc
+                    result = instruction.groupdict()
+                    try:
+                        pc_diff = 12
+                        i = result['instruction'].upper()
+                        if result['single_code']:
+                            op = int(result['single_code'])
+                            self.memory.store_inst(self.pc, I_CODE[i], op)
+                        elif result['single_lbl']:
+                            # resolve address
+                            try:
+                                op = self.symbol_table[result['single_lbl']]
+                            except KeyError:
+                                import ipdb; ipdb.set_trace()
+                                raise UndefinedLabelError(
+                                    'PC: ' + str(self.pc) + 
+                                    '. [' + result['single_lbl'] + ']')
+                            self.memory.store_inst(self.pc, I_CODE[i], op)
+                        else:
+                            op1 = int(result['op_one'][1:])
+                            if result['d_num']:
+                                op2 = int(result['d_num'][1:])
+                            elif result['op_reg']:
+                                op2 = int(result['op_reg'][1:])
+                            elif result['op_label']:
+                                # lookup
+                                try:
+                                    op2 = self.symbol_table[result['op_label']][0]
+                                except KeyError:
+                                    import ipdb; ipdb.set_trace()
+                                    raise UndefinedLabelError(
+                                        'PC: ' + str(self.pc) +
+                                        '. [' + result['single_lbl'] + ']')
+                            self.memory.store_inst(
+                                self.pc, I_CODE[i], op1, op2)
+                    except KeyError as e:
+                        import ipdb; ipdb.set_trace()
+                        raise UnknownInstructionError('PC: ' + str(self.pc) +
+                                                      '. ' + e.message)
 
+                    self.pc = self.pc + pc_diff
+                else:
+                    import ipdb; ipdb.set_trace()
+                    raise UnknownInstructionError(
+                        'Line ' + str(line_number) + ': ' + line)
+
+            line_number = line_number + 1
+                 
 
 class VirtualMachine:
-    pass
+    registers = []
+    zero_flag = 0
+    pc = 0
+    memory = None
+    
+    def TRP(self, code, na):
+        options = {
+            0: lambda : sys.exit(0), # fin.
+            1: lambda : print(self.registers[0].fetch_int(0), end=""), ## FINISH # print int
+            #2: # read in int
+            3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
+            #4: # read in char
+        }
+        try:
+            options[code]()
+        except KeyError:
+            raise UnknownTrapError('Code: ' + str(code) +
+                                   '. PC: ' + self.pc + '.')
+
+    def ADD(self, x, y):
+        self.registers[x].store_int(
+            self.registers[x].fetch_int(0)+self.registers[y].fetch_int(0), 0)
+
+    def ADI(self, x, y):
+        self.registers[x].store_int(
+            self.registers[x].fetch_int(0)+int(y), 0)
+
+    def SUB(self, x, y):
+        self.registers[x].store_int(
+            self.registers[x].fetch_int(0)-self.registers[y].fetch_int(0), 0)
+
+    def MUL(self, x, y):
+        self.registers[x].store_int( 
+            self.registers[x].fetch_int(0)*self.registers[y].fetch_int(0), 0)
+
+    def DIV(self, x, y):
+        self.registers[x].store_int(
+            self.registers[x].fetch_int(0) / self.registers[y].fetch_int(0),
+            0)
+
+    def MOV(self, x, y):
+        a = self.registers[x].memory
+        b = self.registers[y].memory
+
+        a[0] = b[0]
+        a[1] = b[1]
+        a[2] = b[2]
+        a[3] = b[3]
+
+    def STR(self, x, loc):
+        self.memory.store_int(self.registers[x].fetch_int(0), loc)
+
+    def LDR(self, x, loc):
+        self.registers[x].store_int(self.memory.fetch_int(loc), 0)
+
+    def STB(self, x, loc):
+        self.memory.store_char(self.registers[x].fetch_char(3), loc)
+
+    def LDB(self, x, loc):
+        self.registers[x].store_char(self.memory.fetch_char(loc), 3)
+
+    def __init__(self, bytecode, pc):
+        self.memory = bytecode
+        self.pc = pc
+        for i in range(10):
+            self.registers.append(MemoryManager(4))
+        self.function_map = {
+            0: self.TRP,
+            1: self.ADD,
+            2: self.ADI,
+            3: self.SUB,
+            4: self.MUL,
+            5: self.DIV,
+            9: self.MOV,
+            11: self.STR,
+            12: self.LDR,
+            13: self.STB,
+            14: self.LDB
+        }    
+
+    def process(self):
+        i = self.memory.fetch_int(self.pc)
+        op1 = self.memory.fetch_int(self.pc+4)
+        op2 = self.memory.fetch_int(self.pc+8)
+        self.pc = self.pc + 12
+
+        self.function_map[i](op1, op2)
+
+
+def main(*args, **kwargs):
+    args = sys.argv[1:]
+    if len(args) is not 1:
+        print('I just want a file. A single file.')
+        sys.exit(0)
+
+    assembler = Assembler()
+    assembler.read(args[0])
+    assembler.first_pass()
+    assembler.second_pass()
+    vm = VirtualMachine(assembler.memory, assembler.code_seg)
+    
+    while True:
+        vm.process()
+
+if __name__ == '__main__':
+    main()
