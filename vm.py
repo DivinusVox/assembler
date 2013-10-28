@@ -5,8 +5,11 @@ import sys
 
 MEM_SIZE = 52428800  # 50 MB
 #MEM_SIZE = 5000
+REGISTER_COUNT = 10
+
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
 instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]{2,})\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]{2,})))(\s*(;.*)?)?$")
+
 
 I_CODE = {
     "TRP": 0,
@@ -32,9 +35,17 @@ I_CODE = {
     "BRZ": 20
 }
 
+# Define reserved symbols
+RESERVED = []
+for _ in range(REGISTER_COUNT):
+    RESERVED.append("r{}".format(_))
+    RESERVED.append("R{}".format(_))
+RESERVED = RESERVED + I_CODE.keys()
+
 
 class DuplicateLabelError(Exception): pass
 class UndefinedLabelError(Exception): pass
+class ReservedKeywordError(Exception): pass
 class UnknownInstructionError(Exception): pass
 class UnknownDirectiveError(Exception): pass
 class DirectiveInInstructionsError(Exception): pass
@@ -126,6 +137,11 @@ class Assembler:
                 if directive and directive.groupdict()['type']:
                     result = directive.groupdict()
                     if result['label']:
+                        if result['label'] in RESERVED:
+                            raise ReservedKeywordError(
+                                'Line ' + str(line_number) + ': [' +
+                                result['label'] + '] | ' + line
+                            )
                         label = self.symbol_table.get(result['label'])
                         if label:
                             raise DuplicateLabelError(
@@ -140,6 +156,11 @@ class Assembler:
                     result = instruction.groupdict()
                     label = result.get('op_label') or result.get('single_op')
                     if label:
+                        if result['label'] in RESERVED:
+                            raise ReservedKeywordError(
+                                'Line ' + str(line_number) + ': [' +
+                                label + '] | ' + line
+                            )
                         try:
                             self.symbol_table[label][1].append(line_number)
                         except KeyError:
@@ -308,7 +329,7 @@ class VirtualMachine:
     def __init__(self, bytecode, pc):
         self.memory = bytecode
         self.pc = pc
-        for i in range(10):
+        for i in range(REGISTER_COUNT):
             self.registers.append(MemoryManager(4))
         self.function_map = {
             0: self.TRP,
