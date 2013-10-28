@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from __future__ import print_function
+import pdb
 import re
 import sys
 
@@ -8,7 +9,8 @@ MEM_SIZE = 52428800  # 50 MB
 REGISTER_COUNT = 10
 
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+#instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 
 I_CODE = {
@@ -32,7 +34,11 @@ I_CODE = {
     "BNZ": 17,
     "BGT": 18,
     "BLT": 19,
-    "BRZ": 20
+    "BRZ": 20,
+    "LDBI": 21,
+    "STBI": 22,
+    "LDRI": 23,
+    "STBI": 24,
 }
 
 # Define reserved symbols
@@ -66,7 +72,6 @@ def int_to_block(i):
         a = ((i >> 24) & 0b11111111)
         return a, b, c, d
     except TypeError as e:
-        import ipdb; ipdb.set_trace()
         raise Exception("Error writing int to memory. Argument: " + str(i))
 
 
@@ -181,7 +186,6 @@ class Assembler:
                         except KeyError:
                             self.symbol_table[use_label] = (None,[line_number])
                 else:
-                    import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(
                         'Line ' + str(line_number) + ': ' + line)
 
@@ -220,6 +224,8 @@ class Assembler:
             '.INT': store_int,
             '.BYT': store_char
         }
+
+        INDIRECTABLE = ['LDB', 'LDR', 'STB', 'STR']
 
         for line in self.source:
             line = line.strip()
@@ -262,6 +268,8 @@ class Assembler:
                             if result['d_num']:
                                 op2 = int(result['d_num'][1:])
                             elif result['op_reg']:
+                                if i in INDIRECTABLE:
+                                    i = i + 'I'
                                 op2 = int(result['op_reg'][1:])
                             elif result['op_label']:
                                 # lookup
@@ -293,11 +301,12 @@ class VirtualMachine:
 
     def TRP(self, code, na):
         options = {
-            0: lambda : (print("trp 0"), sys.exit(0)), # fin.
-            1: lambda : print(self.registers[0].fetch_int(0), end=""), ## FINISH # print int
+            0: lambda : sys.exit(0), # fin.
+            1: lambda : print(self.registers[0].fetch_int(0), end=""), # print int
             #2: # read in int
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
             #4: # read in char
+            99: lambda : pdb.set_trace()
         }
         try:
             options[code]()
@@ -326,6 +335,10 @@ class VirtualMachine:
             self.registers[x].fetch_int(0) / self.registers[y].fetch_int(0),
             0)
 
+    def CMP(self, x, y):
+        self.registers[x].store_int(
+            self.registers[x].fetch_int(0)-self.registers[y].fetch_int(0), 0)
+
     def MOV(self, x, y):
         a = self.registers[x].memory
         b = self.registers[y].memory
@@ -334,6 +347,9 @@ class VirtualMachine:
         a[1] = b[1]
         a[2] = b[2]
         a[3] = b[3]
+
+    def LDA(self, x, loc):
+        self.registers[x].store_int(loc, 0)
 
     def STR(self, x, loc):
         self.memory.store_int(self.registers[x].fetch_int(0), loc)
@@ -351,8 +367,35 @@ class VirtualMachine:
         self.registers[x].store_char(self.memory.fetch_char(loc), 3)
 
     def JMP(self, loc, x=None):
-        import ipdb; ipdb.set_trace()
         self.pc = loc
+
+    def BNZ(self, x, loc):
+        if self.registers[x].fetch_int(0) != 0:
+            self.JMP(loc)
+
+    def BGT(self, x, loc):
+        if self.registers[x].fetch_int(0) > 0:
+            self.JMP(loc)
+
+    def BLT(self, x, loc):
+        if self.registers[x].fetch_int(0) < 0:
+            self.JMP(loc)
+
+    def BRZ(self, x, loc):
+        if self.registers[x].fetch_int(0) == 0:
+            self.JMP(loc)
+
+    def LDBI(self, x, y):
+        self.LDB(x, self.registers[y].fetch_int(0))
+
+    def STBI(self, x, y):
+        self.STB(x, self.registers[y].fetch_int(0))
+
+    def LDRI(self, x, y):
+        self.LDR(x, self.registers[y].fetch_int(0))
+
+    def STRI(self, x, y):
+        self.STR(x, self.registers[y].fetch_int(0))
 
     def __init__(self, bytecode, pc):
         self.memory = bytecode
@@ -366,19 +409,23 @@ class VirtualMachine:
             3: self.SUB,
             4: self.MUL,
             5: self.DIV,
-            8: lambda x,y: print("CMP", x, y),
+            8: self.CMP,
             9: self.MOV,
-            10: lambda x,y: print("LDA", x, y),
+            10: self.LDA,
             11: self.STR,
             12: self.LDR,
             13: self.STB,
             14: self.LDB,
             15: self.JMP,
             #16:JMR        
-            17: lambda x,y: print("BNZ", x, y),
-            18: lambda x,y: print("BGT", x, y),
-            19: lambda x,y: print("BLT", x, y),
-            20: lambda x,y: print("BRZ", x, y),
+            17: self.BNZ,
+            18: self.BGT,
+            19: self.BLT,
+            20: self.BRZ,
+            21: self.LDBI,
+            22: self.STBI,
+            23: self.LDRI,
+            24: self.STBI
         }
 
     def process(self):
