@@ -17,19 +17,19 @@ I_CODE = {
     "DIV": 5,
     #"AND": 6,
     #"OR": 7,
-    #"CMP": 8,
+    "CMP": 8,
     "MOV": 9,
-    #"LDA": 10,
+    "LDA": 10,
     "STR": 11,
     "LDR": 12,
     "STB": 13,
     "LDB": 14,
-    #"JMP": 15,
+    "JMP": 15,
     #"JMR": 16,
-    #"BNZ": 17,
-    #"BGT": 18,
-    #"BLT": 19,
-    #"BRZ": 20
+    "BNZ": 17,
+    "BGT": 18,
+    "BLT": 19,
+    "BRZ": 20
 }
 
 
@@ -300,6 +300,9 @@ class VirtualMachine:
         self.memory.store_char(self.registers[x].fetch_char(3), loc)
 
     def LDB(self, x, loc):
+    	self.registers[x].memory[0] = 0
+    	self.registers[x].memory[1] = 0
+    	self.registers[x].memory[2] = 0
         self.registers[x].store_char(self.memory.fetch_char(loc), 3)
 
     def __init__(self, bytecode, pc):
