@@ -8,7 +8,7 @@ MEM_SIZE = 52428800  # 50 MB
 REGISTER_COUNT = 10
 
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]{2,})\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]{2,})))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 
 I_CODE = {
@@ -65,8 +65,9 @@ def int_to_block(i):
         b = ((i >> 16) & 0b11111111)
         a = ((i >> 24) & 0b11111111)
         return a, b, c, d
-    except TypeError:
-        raise Exception
+    except TypeError as e:
+        import ipdb; ipdb.set_trace()
+        raise Exception("Error writing int to memory. Argument: " + str(i))
 
 
 def block_to_bin(b):
@@ -150,24 +151,39 @@ class Assembler:
                         else:
                             self.symbol_table[result['label']] = \
                                 (self.pc, [line_number])
-                            if result['type'] == '.INT':
-                                pc_plus = 4
+                    if result['type'].upper() == '.INT':
+                        pc_plus = 4
                 elif instruction and instruction.groupdict()['instruction']:
                     result = instruction.groupdict()
-                    label = result.get('op_label') or result.get('single_op')
-                    if label:
-                        if result['label'] in RESERVED:
+                    declare_label = result.get('label')
+                    use_label = result.get('op_label') or result.get('single_lbl')
+                    if declare_label:
+                        if declare_label in RESERVED:
                             raise ReservedKeywordError(
                                 'Line ' + str(line_number) + ': [' +
-                                label + '] | ' + line
+                                declare_label + '] | ' + line
                             )
+                        label = self.symbol_table.get(declare_label)
+                        if label:
+                            if label[0]:
+                                raise DuplicateLabelError(
+                                    'Line ' + str(line_number) + ': [' +
+                                    label + '] | ' + line
+                                )
+                            self.symbol_table[result['label']] = (self.pc, label[1])
+                        else:
+                            self.symbol_table[result['label']] = \
+                                (self.pc, [])
+                    if use_label:
                         try:
-                            self.symbol_table[label][1].append(line_number)
+                            self.symbol_table[use_label][1].append(line_number)
                         except KeyError:
-                            raise UndefinedLabelError(
-                                'Line ' + str(line_number) + ': [' +
-                                label + '] | ' + line)
+                            self.symbol_table[use_label] = (None,[line_number])
+                            #raise UndefinedLabelError(
+                            #    'Line ' + str(line_number) + ': [' +
+                            #    use_label + '] | ' + line)
                 else:
+                    import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(
                         'Line ' + str(line_number) + ': ' + line)
 
@@ -227,7 +243,7 @@ class Assembler:
                         elif result['single_lbl']:
                             # resolve address
                             try:
-                                op = self.symbol_table[result['single_lbl']]
+                                op = self.symbol_table[result['single_lbl']][0]
                             except KeyError:
                                 raise UndefinedLabelError(
                                     'PC: ' + str(self.pc) +
@@ -338,11 +354,19 @@ class VirtualMachine:
             3: self.SUB,
             4: self.MUL,
             5: self.DIV,
+            8: lambda x,y: print("CMP", x, y),
             9: self.MOV,
+            10: lambda x,y: print("LDA", x, y),
             11: self.STR,
             12: self.LDR,
             13: self.STB,
-            14: self.LDB
+            14: self.LDB,
+            15: lambda x,y: print("JMP", x, y),
+            #16:JMR        
+            17: lambda x,y: print("BNZ", x, y),
+            18: lambda x,y: print("BGT", x, y),
+            19: lambda x,y: print("BLT", x, y),
+            20: lambda x,y: print("BRZ", x, y),
         }
 
     def process(self):
