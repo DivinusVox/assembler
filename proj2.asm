@@ -23,7 +23,7 @@ START1  MOV     r3  r8 ; copy i to test against
         BLT     r3  PART1 ; if i still < SIZE
         JMP     END1 ; break out if not
 PART1   ADD     r8  #1
-        MOV     r0, r8
+        MOV     r0  r8
         TRP     1
         JMP     START1
         ; sum(r7) += arr[i]
@@ -31,5 +31,5 @@ PART1   ADD     r8  #1
         ; if result is 0: print arr[i] is even\n
         ; else: print arr[i] is odd\n
         ; increment i (r8)
-END1
+END1    TRP     0
 
