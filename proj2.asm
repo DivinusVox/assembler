@@ -14,17 +14,22 @@ sum     .int    0
 temp    .int    0
 result  .int    0
 
-        # load size into R9
-        # load i into R8
-        # load sum into R7
-        # load result into R6
-PART1   # mv r3, r8
-        # cmp r3, r9
-        # bgt r3, END1
-        # sum(r7) += arr[i]
-        # result = arr[i] % 2;
-        # if result is 0: print arr[i] is even\n
-        # else: print arr[i] is odd\n
-        # increment i (r8)
+        LDR     r9  SIZE ; init loop variables
+        LDR     r8  i
+        LDR     r7  sum
+        LDR     r6  result
+START1  MOV     r3  r8 ; copy i to test against 
+        CMP     r3  r9 ; compare i to SIZE
+        BLT     r3  PART1 ; if i still < SIZE
+        JMP     END1 ; break out if not
+PART1   ADD     r8  #1
+        MOV     r0, r8
+        TRP     1
+        JMP     START1
+        ; sum(r7) += arr[i]
+        ; result = arr[i] % 2;
+        ; if result is 0: print arr[i] is even\n
+        ; else: print arr[i] is odd\n
+        ; increment i (r8)
 END1
 
