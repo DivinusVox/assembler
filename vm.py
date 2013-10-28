@@ -179,9 +179,6 @@ class Assembler:
                             self.symbol_table[use_label][1].append(line_number)
                         except KeyError:
                             self.symbol_table[use_label] = (None,[line_number])
-                            #raise UndefinedLabelError(
-                            #    'Line ' + str(line_number) + ': [' +
-                            #    use_label + '] | ' + line)
                 else:
                     import ipdb; ipdb.set_trace()
                     raise UnknownInstructionError(
@@ -191,6 +188,16 @@ class Assembler:
                 self.pc = self.pc + pc_plus
 
             line_number = line_number + 1
+
+        # Check for labels with no declaration
+        bad_labels = [_ for _ in self.symbol_table if
+            self.symbol_table[_][0] is None]
+        if bad_labels:
+            msg = "Unknown labels:\n"
+            for _ in bad_labels:
+                msg = (msg + "\t" + str(_) + " on lines:" +
+                      str(self.symbol_table[_][1]) + "\n")
+            raise UndefinedLabelError(msg)
 
     def second_pass(self):
         self.reset_source()
