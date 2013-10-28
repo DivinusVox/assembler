@@ -54,7 +54,7 @@ PART1   MOV     r1  r8 ; calc offset
         ADD     r7  r0 ; add to sum variable
         ; MODULUS CALCULATION
         MOV     r1  r0 ; take a copy for calculation
-        DIV     r0  r3
+        DIV     r0  r3 ; a % n = a - (int(a/n)*n)
         MUL     r0  r3
         SUB     r0  r1
 IF1     BRZ     r0  EPRINT ; if % == 0, jump
@@ -126,7 +126,7 @@ END1    LDA     r8  Sum ; out of loop, now for char pointer
         LDB     r0  r8
         TRP     3
         LDB     r0  space
-        TRP     3        
+        TRP     3
         MOV     r0  r7 ; print sum
         TRP     1
         LDB     r0  line
@@ -201,4 +201,3 @@ END1    LDA     r8  Sum ; out of loop, now for char pointer
 ; END PART TWO
 
         TRP     0 ; TERMINATE
-
