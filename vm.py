@@ -154,6 +154,7 @@ class Assembler:
                     if result['type'].upper() == '.INT':
                         pc_plus = 4
                 elif instruction and instruction.groupdict()['instruction']:
+                    pc_plus = 12
                     result = instruction.groupdict()
                     declare_label = result.get('label')
                     use_label = result.get('op_label') or result.get('single_lbl')
@@ -292,7 +293,7 @@ class VirtualMachine:
 
     def TRP(self, code, na):
         options = {
-            0: lambda : sys.exit(0), # fin.
+            0: lambda : (print("trp 0"), sys.exit(0)), # fin.
             1: lambda : print(self.registers[0].fetch_int(0), end=""), ## FINISH # print int
             #2: # read in int
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
@@ -349,6 +350,10 @@ class VirtualMachine:
     	self.registers[x].memory[2] = 0
         self.registers[x].store_char(self.memory.fetch_char(loc), 3)
 
+    def JMP(self, loc, x=None):
+        import ipdb; ipdb.set_trace()
+        self.pc = loc
+
     def __init__(self, bytecode, pc):
         self.memory = bytecode
         self.pc = pc
@@ -368,7 +373,7 @@ class VirtualMachine:
             12: self.LDR,
             13: self.STB,
             14: self.LDB,
-            15: lambda x,y: print("JMP", x, y),
+            15: self.JMP,
             #16:JMR        
             17: lambda x,y: print("BNZ", x, y),
             18: lambda x,y: print("BGT", x, y),
