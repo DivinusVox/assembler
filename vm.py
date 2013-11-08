@@ -217,6 +217,10 @@ class Assembler:
         def store_char(val):
             if val == "'\\n'":
                 val = val.replace('\\n', '\n')
+            elif val == "'\\0'":
+                val = val.replace('\\0', '\0')
+            elif val == "'\\t'":
+                val = val.replace('\\t', '\t')
             self.memory.store_char(val.replace("'", ""), self.pc)
             self.pc = self.pc + 1
 
