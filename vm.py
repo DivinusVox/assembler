@@ -249,6 +249,7 @@ class Assembler:
                         'Line ' + str(line_number) + ': [' + result['type'] +
                         '] ' + line);
                 elif instruction and instruction.groupdict()['instruction']:
+                    # TODO: Instruction rigidity
                     if self.code_seg is None:
                         self.code_seg = self.pc
                     result = instruction.groupdict()
