@@ -343,12 +343,17 @@ class VirtualMachine:
             0)
 
     def AND(self, x, y):
-        # TODO
-        pass
+        # val > 0 is True
+        if self.registers[x].fetch_int(0) and self.registers[y].fetch_int(0):
+            self.registers[x].store_int(1, 0)
+        else:
+            self.registers[x].store_int(0, 0)
 
     def OR(self, x, y):
-        # TODO
-        pass
+        if self.registers[x].fetch_int(0) or self.registers[y].fetch_int(0):
+            self.registers[x].store_int(1, 0)
+        else:
+            self.registers[x].store_int(0, 0)
 
     def CMP(self, x, y):
         self.registers[x].store_int(
