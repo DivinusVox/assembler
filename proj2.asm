@@ -190,6 +190,11 @@ END1    LDA     r8  Sum ; out of loop, now for char pointer
         TRP     3
         LDB     r0  line
         TRP     3
+        LDA     r9  DAGS
+        LDR     r0  r9
+        TRP     1
+        LDB     r0  line
+        TRP     3
         ;Subtract DAGS from GADS
         LDA     r9  DAGS
         LDR     r0  r9
