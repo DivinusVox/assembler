@@ -30,7 +30,7 @@ I_CODE = {
     "STB": 13,
     "LDB": 14,
     "JMP": 15,
-    #"JMR": 16,
+    "JMR": 16,
     "BNZ": 17,
     "BGT": 18,
     "BLT": 19,
@@ -307,9 +307,9 @@ class VirtualMachine:
         options = {
             0: lambda : sys.exit(0), # fin.
             1: lambda : print(self.registers[0].fetch_int(0), end=""), # print int
-            #2: # read in int
+            #2: # read in int TODO
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
-            #4: # read in char
+            #4: # read in char TODO
             99: lambda : pdb.set_trace()
         }
         try:
@@ -381,6 +381,9 @@ class VirtualMachine:
     def JMP(self, loc, x=None):
         self.pc = loc
 
+    def JMR(self, x, y=None):
+        self.pc = self.registers[x].fetch_int(0)
+
     def BNZ(self, x, loc):
         if self.registers[x].fetch_int(0) != 0:
             self.JMP(loc)
@@ -431,7 +434,7 @@ class VirtualMachine:
             13: self.STB,
             14: self.LDB,
             15: self.JMP,
-            #16:JMR        
+            16: self.JMR,
             17: self.BNZ,
             18: self.BGT,
             19: self.BLT,
