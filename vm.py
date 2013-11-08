@@ -9,8 +9,8 @@ MEM_SIZE = 52428800  # 50 MB
 REGISTER_COUNT = 10
 
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-#instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_lbl>[a-zA-Z0-9]{2,})|(?P<single_code>\d+))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_reg>[rR]\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+#instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 
 I_CODE = {
@@ -257,6 +257,9 @@ class Assembler:
                         i = result['instruction'].upper()
                         if result['single_code']:
                             op = int(result['single_code'])
+                            self.memory.store_inst(self.pc, I_CODE[i], op)
+                        elif result['single_reg']:
+                            op = int(result['single_reg'][1:])
                             self.memory.store_inst(self.pc, I_CODE[i], op)
                         elif result['single_lbl']:
                             # resolve address
