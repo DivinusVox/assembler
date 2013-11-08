@@ -20,8 +20,8 @@ I_CODE = {
     "SUB": 3,
     "MUL": 4,
     "DIV": 5,
-    #"AND": 6,
-    #"OR": 7,
+    "AND": 6,
+    "OR": 7,
     "CMP": 8,
     "MOV": 9,
     "LDA": 10,
@@ -298,7 +298,7 @@ class Assembler:
 
 
 class VirtualMachine:
-    registers = []
+    registers = dict()
     zero_flag = 0
     pc = 0
     memory = None
@@ -338,6 +338,14 @@ class VirtualMachine:
         self.registers[x].store_int(
             self.registers[x].fetch_int(0) / self.registers[y].fetch_int(0),
             0)
+
+    def AND(self, x, y):
+        # TODO
+        pass
+
+    def OR(self, x, y):
+        # TODO
+        pass
 
     def CMP(self, x, y):
         self.registers[x].store_int(
@@ -405,7 +413,7 @@ class VirtualMachine:
         self.memory = bytecode
         self.pc = pc
         for i in range(REGISTER_COUNT):
-            self.registers.append(MemoryManager(4))
+            self.registers[i]=(MemoryManager(4))
         self.function_map = {
             0: self.TRP,
             1: self.ADD,
@@ -413,6 +421,8 @@ class VirtualMachine:
             3: self.SUB,
             4: self.MUL,
             5: self.DIV,
+            6: self.AND,
+            7: self.OR,
             8: self.CMP,
             9: self.MOV,
             10: self.LDA,
