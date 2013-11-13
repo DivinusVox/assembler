@@ -4,14 +4,13 @@ import pdb
 import re
 import sys
 
-MEM_SIZE = 52428800  # 50 MB
-#MEM_SIZE = 5000
-REGISTER_COUNT = 10
+#MEM_SIZE = 52428800  # 50 MB
+MEM_SIZE = 51200   # 50 kB
+REGISTER_COUNT = 15
+pc = 10
 
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_reg>[rR]\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
-#instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
-
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d+|pc|sp|st|sb|fp)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 I_CODE = {
     "TRP": 0,
@@ -46,8 +45,20 @@ RESERVED = []
 for _ in range(REGISTER_COUNT):
     RESERVED.append("r{}".format(_))
     RESERVED.append("R{}".format(_))
+RESERVED.append("pc")
+RESERVED.append("st")
+RESERVED.append("sb")
+RESERVED.append("sp")
+RESERVED.append("fp")
 RESERVED = RESERVED + I_CODE.keys()
 
+SPECIAL_REGISTERS = {
+    "pc": 10,
+    "sp": 11,
+    "st": 12,
+    "sb": 13,
+    "fp": 14
+}
 
 class DuplicateLabelError(Exception): pass
 class UndefinedLabelError(Exception): pass
@@ -260,7 +271,9 @@ class Assembler:
                             op = int(result['single_code'])
                             self.memory.store_inst(self.pc, I_CODE[i], op)
                         elif result['single_reg']:
-                            op = int(result['single_reg'][1:])
+                            op = int(SPECIAL_REGISTERS.get(
+                                result['single_reg'],
+                                result['single_reg'][1:]))
                             self.memory.store_inst(self.pc, I_CODE[i], op)
                         elif result['single_lbl']:
                             # resolve address
@@ -272,13 +285,17 @@ class Assembler:
                                     '. [' + result['single_lbl'] + ']')
                             self.memory.store_inst(self.pc, I_CODE[i], op)
                         else:
-                            op1 = int(result['op_one'][1:])
+                            op1 = int(SPECIAL_REGISTERS.get(
+                                result['op_one'],
+                                result['op_one'][1:]))
                             if result['d_num']:
                                 op2 = int(result['d_num'][1:])
                             elif result['op_reg']:
                                 if i in INDIRECTABLE:
                                     i = i + 'I'
-                                op2 = int(result['op_reg'][1:])
+                                op2 = int(SPECIAL_REGISTERS.get(
+                                    result['op_reg'],
+                                    result['op_reg'][1:]))
                             elif result['op_label']:
                                 # lookup
                                 try:
@@ -299,12 +316,14 @@ class Assembler:
                         'Line ' + str(line_number) + ': ' + line)
 
             line_number = line_number + 1
+        self.stack_top = self.pc
 
 
 class VirtualMachine:
     registers = dict()
     zero_flag = 0
     pc = 0
+    stack_top = 0
     memory = None
 
     def TRP(self, code, na):
@@ -421,11 +440,21 @@ class VirtualMachine:
     def STRI(self, x, y):
         self.STR(x, self.registers[y].fetch_int(0))
 
-    def __init__(self, bytecode, pc):
+    def __init__(self, bytecode, pc, stack_top):
         self.memory = bytecode
-        self.pc = pc
+        #self.pc = pc
+        self.stack_top = stack_top
+        self.stack_bottom = MEM_SIZE
         for i in range(REGISTER_COUNT):
             self.registers[i]=(MemoryManager(4))
+
+        # Initialize state registers
+        self.registers[10].store_int(pc, 0)
+        self.registers[11].store_int(MEM_SIZE, 0)
+        self.registers[12].store_int(stack_top, 0)
+        self.registers[13].store_int(MEM_SIZE, 0)
+        self.registers[14].store_int(MEM_SIZE, 0)
+
         self.function_map = {
             0: self.TRP,
             1: self.ADD,
@@ -455,10 +484,12 @@ class VirtualMachine:
         }
 
     def process(self):
-        i = self.memory.fetch_int(self.pc)
-        op1 = self.memory.fetch_int(self.pc+4)
-        op2 = self.memory.fetch_int(self.pc+8)
-        self.pc = self.pc + 12
+        i = self.memory.fetch_int(self.registers[pc].fetch_int(0))
+        _op1_raw = self.registers[pc].fetch_int(0) + 4
+        op1 = self.memory.fetch_int(_op1_raw)
+        _op2_raw = self.registers[pc].fetch_int(0) + 8
+        op2 = self.memory.fetch_int(_op2_raw)
+        self.registers[pc].store_int(self.registers[pc].fetch_int(0) + 12, 0)
 
         self.function_map[i](op1, op2)
 
@@ -473,7 +504,7 @@ def main(*args, **kwargs):
     assembler.read(args[0])
     assembler.first_pass()
     assembler.second_pass()
-    vm = VirtualMachine(assembler.memory, assembler.code_seg)
+    vm = VirtualMachine(assembler.memory, assembler.code_seg, assembler.stack_top)
 
     while True:
         vm.process()
