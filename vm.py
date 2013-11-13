@@ -38,7 +38,7 @@ I_CODE = {
     "LDBI": 21,
     "STBI": 22,
     "LDRI": 23,
-    "STBI": 24,
+    "STRI": 24,
 }
 
 # Define reserved symbols
