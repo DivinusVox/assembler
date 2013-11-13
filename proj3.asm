@@ -21,22 +21,24 @@ neg    .byt    '-'
 at     .byt    '@'
 line   .byt    '\n'
 
-main    JMP     reset
+main    MOV     r0  pc
+        TRP     1
+        LDB     r0  line
+        TRP     3
 back    TRP     0
-
 
 reset   LDB     r8  zeroc
         LDR     r7  zeroi    ; counter
         LDA     r2  c
-;forc    LDR     r1  SIZE
-;        CMP     r1  r7
-;        BRZ     r1  endc
-;        MOV     r0  r2
-;        ADD     r0  r7
-;        STR     r8  r0
-;        ADI     r7  #1
-;        JMP     forc
-endc    LDA     r2  c
+forc    LDR     r1  SIZE
+        CMP     r1  r7
+        BRZ     r1  endc
+        MOV     r0  r2
+        ADD     r0  r7
+        STR     r8  r0
+        ADI     r7  #1
+        JMP     forc
+endc    LDA     r2  c       ; test sequence for verification
         LDR     r7  zeroi
 ford    LDR     r1 SIZE
         CMP     r1  r7
