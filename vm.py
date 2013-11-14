@@ -490,13 +490,18 @@ class VirtualMachine:
         }
 
     def process(self):
+        # Get function code
         i = self.memory.fetch_int(self.registers[pc].fetch_int(0))
-        _op1_raw = self.registers[pc].fetch_int(0) + 4
-        op1 = self.memory.fetch_int(_op1_raw)
-        _op2_raw = self.registers[pc].fetch_int(0) + 8
-        op2 = self.memory.fetch_int(_op2_raw)
+        # Determine arg 1
+        _op1 = self.registers[pc].fetch_int(0) + 4
+        op1 = self.memory.fetch_int(_op1)
+        # Determine arg 2
+        _op2 = self.registers[pc].fetch_int(0) + 8
+        op2 = self.memory.fetch_int(_op2)
+        # Increment PC by 1 instruction
         self.registers[pc].store_int(self.registers[pc].fetch_int(0) + 12, 0)
 
+        # Execute
         self.function_map[i](op1, op2)
 
 
