@@ -97,6 +97,34 @@ line   .byt    '\n'
 ; START main
 
 main    LDB     r0  at
+        ; reset(1, 0, 0, 0) // Reset globals
+        MOV     r5  sp   ; Calculate record size
+        ADI     r5  #-16 ; 4 ints
+        CMP     r5  st   ; Check for overflow
+        BLT     r5  odie
+        MOV     r6  fp   ; temp for PFP
+        MOV     fp  sp   ; set FP to next
+        ADI     sp  #-8  ; Leave space for return addy
+        STR     r6  sp   ; save pfp
+        LDR     r0  zero
+        ADI     r0  #1
+        ADI     sp  #-4
+        STR     r0  sp   ; arg 1 = 1
+        LDR     r0  zero
+        ADI     r0  #-4
+        STR     r0  sp   ; arg 2 = 0
+        ADI     r0  #-4
+        STR     r0  sp   ; arg 3 = 0
+        ADI     r0  #-4
+        STR     r0  sp   ; arg 4 = 0
+        MOV     r5  pc   ; Calculate return addy
+        ADI     r5  #60  ; Increment to line after jmp
+        ADI     sp  #4   ; back to save return addy
+        STR     r5  sp
+        ADI     sp  #-4
+        JMP     reset
+        TRP     99
+        ; getdata()
         MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
         CMP     r5  st  ; Check for overflow
