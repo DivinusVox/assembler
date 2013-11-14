@@ -322,8 +322,6 @@ class Assembler:
 class VirtualMachine:
     registers = dict()
     zero_flag = 0
-    pc = 0
-    stack_top = 0
     memory = None
     input_buffer = ""
 
@@ -334,7 +332,7 @@ class VirtualMachine:
             #2: # read in int TODO
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
             4: self.getchar,
-            99: lambda : pdb.set_trace()
+            99: pdb.set_trace
         }
         try:
             options[code]()
@@ -416,10 +414,10 @@ class VirtualMachine:
         self.registers[x].store_char(self.memory.fetch_char(loc), 3)
 
     def JMP(self, loc, x=None):
-        self.pc = loc
+        self.registers[pc].store_int(loc, 0)
 
     def JMR(self, x, y=None):
-        self.pc = self.registers[x].fetch_int(0)
+        self.JMP(self.registers[x].fetch_int(0))
 
     def BNZ(self, x, loc):
         if self.registers[x].fetch_int(0) != 0:
@@ -488,7 +486,7 @@ class VirtualMachine:
             21: self.LDBI,
             22: self.STBI,
             23: self.LDRI,
-            24: self.STBI
+            24: self.STRI
         }
 
     def process(self):
