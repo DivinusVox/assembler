@@ -350,12 +350,10 @@ mewh3   LDR     r1  zero ; endwhile
         TRP     1        ; '%d'
         LDB     r0  line
         TRP     3        ; '\n'
-        
+
 meif3   JMP     meif2
 
-retmain LDB     r0  line
-        TRP     3
-back    TRP     0
+retmain TRP     0
 
 ; END OF main
 
