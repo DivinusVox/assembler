@@ -44,11 +44,12 @@ main    MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
         CMP     r5  st  ; Check for overflow
         BLT     r5  odie
+        MOV     r6  fp  ; temp for PFP
+        MOV     fp  sp  ; set FP to next
         ADI     sp  #-8 ; Leave space for return addy
-        STR     fp  sp  ; save pfp
-        MOV     fp  sp  ; set new fp
+        STR     r6  sp  ; save pfp
         MOV     r5  pc  ; Calculate return addy
-        ADI     r5  #48 ; Increment to line after jmp
+        ADI     r5  #60 ; Increment to line after jmp
         ADI     sp  #4  ; back to save return addy
         STR     r5  sp
         ADI     sp  #-4
@@ -132,27 +133,30 @@ whilef  LDB     r1  r5
         STB     r0  r5
         JMP     whilef
 endf    MOV     sp  fp  ; RETURN
-        MOV     sp  r1  ; Test for underflow
+        MOV     r1  sp  ; Test for underflow
         CMP     r1  sb
-        BLT     r1  udie    ; underflow
-
+        BGT     r1  udie  ; underflow
+        ;TRP     99
         ADI     sp  #-4
-        LDR     r0  sp
+        LDR     r0  sp  ; retrieve return addy
         ADI     sp  #-4
-        LDR     r1  sp
+        LDR     r1  sp  ; retrieve pfp
         ADI     sp  #8
+        MOV     fp  r1  ; set FP to previous
+        JMR     r0      ; go back
+
 
 reset   LDB     r8  zeroc
         LDR     r7  zeroi    ; counter
         LDA     r2  c
 forr    LDR     r1  SIZE
         CMP     r1  r7
-        BRZ     r1  endc
+        BRZ     r1  endr
         MOV     r0  r2
         ADD     r0  r7
         STR     r8  r0
         ADI     r7  #1
-        JMP     forc
+        JMP     forr
 endr    LDA     r2  c       ; test sequence for verification
         LDR     r7  zeroi
 ford    LDR     r1 SIZE
