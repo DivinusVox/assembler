@@ -35,8 +35,8 @@ main    ADI     r5  sp  ; Calculate record size
         CMP     r5  st  ; Check for overflow
         BLT     r5  overdie
         ADI     sp  #-8 ; Leave space for return addy
-        ;STR     fp  sp  ; save pfp
-        ;MOV     fp  sp  ; set new fp
+        STR     fp  sp  ; save pfp
+        MOV     fp  sp  ; set new fp
         MOV     r5  pc  ; Calculate return addy
         ADI     r5  #48 ; Increment to line after jmp
         ADI     sp  #4  ; back to save return addy

@@ -10,7 +10,7 @@ REGISTER_COUNT = 15
 pc = 10
 
 directive_re = re.compile(r"((?P<label>[a-zA-Z0-9]+)\s+)?((?P<type>\.[a-zA-Z]+)\s+)(?P<value>(-?[0-9]+)|'(.{1,2})')")
-instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)?(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d+|pc|sp|st|sb|fp)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
+instruction_re = re.compile(r"^((?P<label>[A-Za-z0-9]+)\s+)??(?P<instruction>[A-Za-z]{2,3})\s+(((?P<single_code>\d+)|(?P<single_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<single_lbl>[a-zA-Z0-9]{2,}))|(?P<op_one>[rR]\d+|pc|sp|st|sb|fp)\s+((?P<d_num>#(-)?\d+)|(?P<op_reg>[rR]\d+|pc|sp|st|sb|fp)|(?P<op_label>[A-Za-z0-9]+)))(\s*(;.*)?)?$")
 
 I_CODE = {
     "TRP": 0,
