@@ -99,7 +99,7 @@ line   .byt    '\n'
 main    LDB     r0  at
         ; reset(1, 0, 0, 0) // Reset globals
         MOV     r5  sp   ; Calculate record size
-        ADI     r5  #-16 ; 4 ints
+        ADI     r5  #-24 ; 4 ints, pfp, return add
         CMP     r5  st   ; Check for overflow
         BLT     r5  odie
         MOV     r6  fp   ; temp for PFP
@@ -111,17 +111,17 @@ main    LDB     r0  at
         ADI     sp  #-4
         STR     r0  sp   ; arg 1 = 1
         LDR     r0  zero
-        ADI     r0  #-4
+        ADI     sp  #-4
         STR     r0  sp   ; arg 2 = 0
-        ADI     r0  #-4
+        ADI     sp  #-4
         STR     r0  sp   ; arg 3 = 0
-        ADI     r0  #-4
+        ADI     sp  #-4
         STR     r0  sp   ; arg 4 = 0
         MOV     r5  pc   ; Calculate return addy
         ADI     r5  #60  ; Increment to line after jmp
-        ADI     sp  #4   ; back to save return addy
+        ADI     sp  #20  ; back to save return addy
         STR     r5  sp
-        ADI     sp  #-4
+        ADI     sp  #-20
         JMP     reset
         TRP     99
         ; getdata()
@@ -430,7 +430,7 @@ forr    LDR     r1  SIZE
         STR     r8  r0
         ADI     r7  #1
         JMP     forr
-endr    ADI     sp  #20  ;data = w
+endr    ADI     sp  #16  ;data = w
         LDR     r0  sp
         STR     r0  data
         ADI     sp  #-4  ;opdv = x
@@ -457,3 +457,4 @@ endr    ADI     sp  #20  ;data = w
         MOV     fp  r1  ; set FP to previous
         JMR     r0      ; go back
 
+; END OF reset
