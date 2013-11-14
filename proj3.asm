@@ -30,7 +30,7 @@ neg    .byt    '-'
 at     .byt    '@'
 line   .byt    '\n'
 
-main    ADI     r5  sp  ; Calculate record size
+main    MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
         CMP     r5  st  ; Check for overflow
         BLT     r5  overdie
