@@ -14,6 +14,15 @@ opdv     .int    0
 zeroc    .byt    '0'
 zeroi    .int    0
 
+over     .byt   'O'
+         .byt   'v'
+         .byt   'e'
+         .byt   'r'
+         .byt   'f'
+         .byt   'l'
+         .byt   'o'
+         .byt   'w'
+
 
 ; PRINT/COMPARISION CHARS
 pos    .byt    '+'
@@ -21,15 +30,52 @@ neg    .byt    '-'
 at     .byt    '@'
 line   .byt    '\n'
 
-main    LDR     r5  zeroi
-        ADI     r5  #1
-        ADI     sp  #-4
+main    ADI     r5  sp  ; Calculate record size
+        ADI     r5  #-8
+        CMP     r5  st  ; Check for overflow
+        BLT     r5  overdie
+        ADI     sp  #-8 ; Leave space for return addy
+        ;STR     fp  sp  ; save pfp
+        ;MOV     fp  sp  ; set new fp
+        MOV     r5  pc  ; Calculate return addy
+        ADI     r5  #48 ; Increment to line after jmp
+        ADI     sp  #4  ; back to save return addy
         STR     r5  sp
+        ADI     sp  #-4
         JMP     flush
+        LDB     r0  at
         TRP     3
         LDB     r0  line
         TRP     3
 back    TRP     0
+
+overdie LDA     r1  over
+        LDB     r0  r1
+        TRP     3       ; O
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; v
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; e
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; r
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; f
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; l
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; o
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; w
+        LDB     r0  line
+        TRP     3
+        TRP     0
 
 flush   LDR     r1  zeroi
         STR     r1  data
