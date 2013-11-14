@@ -1,16 +1,16 @@
 SIZE     .int    7 ; const
-cnt      .int    5
-tenth    .int    4
-c        .byt    '8'
-         .byt    '8'
-         .byt    '8'
-         .byt    '8'
-         .byt    '8'
-         .byt    '8'
-         .byt    '8'
-data     .int    1
-flag     .int    2
-opdv     .int    3
+cnt      .int    0
+tenth    .int    0
+c        .byt    '0'
+         .byt    '0'
+         .byt    '0'
+         .byt    '0'
+         .byt    '0'
+         .byt    '0'
+         .byt    '0'
+data     .int    0
+flag     .int    0
+opdv     .int    0
 zeroc    .byt    '0'
 zeroi    .int    0
 
@@ -24,9 +24,7 @@ line   .byt    '\n'
 main    LDR     r5  zeroi
         ADI     r5  #1
         ADI     sp  #-4
-        TRP     99
         STR     r5  sp
-        TRP     99
         JMP     flush
         TRP     3
         LDB     r0  line
