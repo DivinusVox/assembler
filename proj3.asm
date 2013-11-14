@@ -88,13 +88,13 @@ opis     .byt   'O'
          .byt   's'
          .byt   ' '
 
-
-
 ; PRINT/COMPARISION CHARS
 pos    .byt    '+'
 neg    .byt    '-'
 at     .byt    '@'
 line   .byt    '\n'
+
+; START main
 
 main    LDB     r0  at
         MOV     r5  sp  ; Calculate record size
@@ -116,6 +116,10 @@ main    LDB     r0  at
         LDB     r0  line
         TRP     3
 back    TRP     0
+
+; END OF main
+
+; START odie (overflow die)
 
 odie    LDA     r1  over
         LDB     r0  r1
@@ -144,6 +148,10 @@ odie    LDA     r1  over
         LDB     r0  line
         TRP     3
         TRP     0
+
+; END OF odie (overflow die)
+
+; START udie (underflow die)
 
 udie    LDA     r1  under
         LDB     r0  r1
@@ -176,6 +184,10 @@ udie    LDA     r1  under
         LDB     r0  line
         TRP     3
         TRP     0
+
+; END OF udie (underflow die)
+
+; START opd
 
 opd     MOV     r5  sp  ; Need to calculate space req's
         ADI     r5  #-4  ; 1 int
@@ -326,8 +338,22 @@ kmul    MUL     r2  r3
         ADD     r0  r2    ; opdy += t
         STR     r0  opdy
 
-ret1    JMP     back; go back!
+ret1    MOV     sp  fp  ; RETURN
+        MOV     r1  sp  ; Test for underflow
+        CMP     r1  sb
+        BGT     r1  udie  ; underflow
+        ;TRP     99
+        ADI     sp  #-4
+        LDR     r0  sp  ; retrieve return addy
+        ADI     sp  #-4
+        LDR     r1  sp  ; retrieve pfp
+        ADI     sp  #8
+        MOV     fp  r1  ; set FP to previous
+        JMR     r0      ; go back
 
+; END OF opd
+
+; START flush
 
 flush   LDR     r1  zero  ; No overflow test needed.
         STR     r1  data
@@ -354,6 +380,9 @@ endf    MOV     sp  fp  ; RETURN
         MOV     fp  r1  ; set FP to previous
         JMR     r0      ; go back
 
+; END OF flush
+
+; START reset
 
 reset   LDB     r8  nums
         LDR     r7  zero    ; counter
