@@ -123,7 +123,6 @@ main    LDB     r0  at
         STR     r5  sp
         ADI     sp  #-20
         JMP     reset
-        TRP     99
         ; getdata()
         MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
@@ -370,7 +369,6 @@ ret1    MOV     sp  fp  ; RETURN
         MOV     r1  sp  ; Test for underflow
         CMP     r1  sb
         BGT     r1  udie  ; underflow
-        ;TRP     99
         ADI     sp  #-4
         LDR     r0  sp  ; retrieve return addy
         ADI     sp  #-4
@@ -399,7 +397,6 @@ endf    MOV     sp  fp  ; RETURN
         MOV     r1  sp  ; Test for underflow
         CMP     r1  sb
         BGT     r1  udie  ; underflow
-        ;TRP     99
         ADI     sp  #-4
         LDR     r0  sp  ; retrieve return addy
         ADI     sp  #-4
@@ -444,25 +441,25 @@ else2   LDA     r1  big
         TRP     3        ; 't'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; 'o' 
+        TRP     3        ; 'o'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; 'o' 
+        TRP     3        ; 'o'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; ' ' 
+        TRP     3        ; ' '
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; 'B' 
+        TRP     3        ; 'B'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; 'i' 
+        TRP     3        ; 'i'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; 'g' 
+        TRP     3        ; 'g'
         ADI     r1  #1
         LDB     r0  r1
-        TRP     3        ; '\n' 
+        TRP     3        ; '\n'
 ; flush buffer
         MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
@@ -540,7 +537,6 @@ endr    ADI     sp  #16  ;data = w
         MOV     r1  sp  ; Test for underflow
         CMP     r1  sb
         BGT     r1  udie  ; underflow
-        ;TRP     99
         ADI     sp  #-4
         LDR     r0  sp  ; retrieve return addy
         ADI     sp  #-4
