@@ -23,6 +23,16 @@ over     .byt   'O'
          .byt   'o'
          .byt   'w'
 
+under    .byt   'U'
+         .byt   'n'
+         .byt   'd'
+         .byt   'e'
+         .byt   'r'
+         .byt   'f'
+         .byt   'l'
+         .byt   'o'
+         .byt   'w'
+
 
 ; PRINT/COMPARISION CHARS
 pos    .byt    '+'
@@ -33,7 +43,7 @@ line   .byt    '\n'
 main    MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
         CMP     r5  st  ; Check for overflow
-        BLT     r5  overdie
+        BLT     r5  odie
         ADI     sp  #-8 ; Leave space for return addy
         STR     fp  sp  ; save pfp
         MOV     fp  sp  ; set new fp
@@ -49,7 +59,7 @@ main    MOV     r5  sp  ; Calculate record size
         TRP     3
 back    TRP     0
 
-overdie LDA     r1  over
+odie    LDA     r1  over
         LDB     r0  r1
         TRP     3       ; O
         ADI     r1  #1
@@ -77,6 +87,38 @@ overdie LDA     r1  over
         TRP     3
         TRP     0
 
+udie    LDA     r1  under
+        LDB     r0  r1
+        TRP     3       ; U
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; n
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; d
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; e
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; r
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; f
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; l
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; o
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; w
+        ADI     r1  #1
+        LDB     r0  line
+        TRP     3
+        TRP     0
+
 flush   LDR     r1  zeroi
         STR     r1  data
         LDA     r5  c
@@ -89,12 +131,21 @@ whilef  LDB     r1  r5
         TRP     4
         STB     r0  r5
         JMP     whilef
-endf    JMP     back
+endf    MOV     sp  fp  ; RETURN
+        MOV     sp  r1  ; Test for underflow
+        CMP     r1  sb
+        BLT     r1  udie    ; underflow
+
+        ADI     sp  #-4
+        LDR     r0  sp
+        ADI     sp  #-4
+        LDR     r1  sp
+        ADI     sp  #8
 
 reset   LDB     r8  zeroc
         LDR     r7  zeroi    ; counter
         LDA     r2  c
-forc    LDR     r1  SIZE
+forr    LDR     r1  SIZE
         CMP     r1  r7
         BRZ     r1  endc
         MOV     r0  r2
@@ -102,7 +153,7 @@ forc    LDR     r1  SIZE
         STR     r8  r0
         ADI     r7  #1
         JMP     forc
-endc    LDA     r2  c       ; test sequence for verification
+endr    LDA     r2  c       ; test sequence for verification
         LDR     r7  zeroi
 ford    LDR     r1 SIZE
         CMP     r1  r7
