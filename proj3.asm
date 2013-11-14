@@ -96,7 +96,8 @@ neg    .byt    '-'
 at     .byt    '@'
 line   .byt    '\n'
 
-main    MOV     r5  sp  ; Calculate record size
+main    LDB     r0  at
+        MOV     r5  sp  ; Calculate record size
         ADI     r5  #-8
         CMP     r5  st  ; Check for overflow
         BLT     r5  odie
@@ -188,7 +189,7 @@ opd     MOV     r5  sp  ; Need to calculate space req's
         ADI     sp  #4
         LDB     r0  sp  ; Load for eval
         ADI     sp  #-4 ; go back to local int
-if1     MOV     r1  r0  ; Disposable for testing
+if1a    MOV     r1  r0  ; Disposable for testing
         LDA     r3  nums
         LDR     r2  r3 ; fetch '0'
         CMP     r1  r2
@@ -238,7 +239,7 @@ if1     MOV     r1  r0  ; Disposable for testing
         MOV     r1  r0
         CMP     r1  r2
         BRZ     r1  case1j ; j == '9'
-else1   LDA     r1  nan
+else1a  LDA     r1  nan
         TRP     3       ; print num
         LDB     r0  r1  ; print " is not a number\n"
         TRP     3       ; ' '
@@ -295,9 +296,38 @@ else1   LDA     r1  nan
         STR     r0  flag  ; flag = 1
         JMP     ret1
 ; Time for cases! Ugh
-case1a  
+case1a  TRP     3
+case1b  TRP     3
+case1c  TRP     3
+case1d  TRP     3
+case1e  TRP     3
+case1f  TRP     3
+case1g  TRP     3
+case1h  TRP     3
+case1i  TRP     3
+case1j  TRP     3
 
-ret1 ; go back!
+if1b    LDR     r1  flag  ; if !flag
+        LDR     r0  zero
+        CMP     r0  r1
+        BLT     ret1      ; flag is True
+        LDR     r2  sp    ; fetch t from stack
+        ADI     sp  #5
+        LDR     r3  sp    ; fetch k from stack
+        ADI     sp  #4
+        LDR     r4  sp    ; fetch s from stack
+if1c    LDB     r0  plus  ; if s == '+'
+        CMP     r0  r4
+        BRZ     r0  kmul
+kneg    LDR     r0  #-1
+        MUL     r3  r0    ; -k
+kmul    MUL     r2  r3
+        LDR     r0  opdy
+        ADD     r0  r2    ; opdy += t
+        STR     r0  opdy
+
+ret1    JMP     back; go back!
+
 
 flush   LDR     r1  zero  ; No overflow test needed.
         STR     r1  data
