@@ -325,6 +325,7 @@ class VirtualMachine:
     pc = 0
     stack_top = 0
     memory = None
+    input_buffer = ""
 
     def TRP(self, code, na):
         options = {
@@ -332,7 +333,7 @@ class VirtualMachine:
             1: lambda : print(self.registers[0].fetch_int(0), end=""), # print int
             #2: # read in int TODO
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
-            #4: # read in char TODO
+            4: self.getchar,
             99: lambda : pdb.set_trace()
         }
         try:
@@ -340,6 +341,14 @@ class VirtualMachine:
         except KeyError:
             raise UnknownTrapError('Code: ' + str(code) +
                                    '. PC: ' + self.pc + '.')
+
+    def getchar(self):
+        if self.input_buffer == "":
+            self.input_buffer = raw_input() + '\n'
+
+        val = self.input_buffer[0]
+        self.input_buffer = self.input_buffer[1:]
+        self.registers[0].store_char(val, 3)
 
     def ADD(self, x, y):
         self.registers[x].store_int(
@@ -442,7 +451,6 @@ class VirtualMachine:
 
     def __init__(self, bytecode, pc, stack_top):
         self.memory = bytecode
-        #self.pc = pc
         self.stack_top = stack_top
         self.stack_bottom = MEM_SIZE
         for i in range(REGISTER_COUNT):
