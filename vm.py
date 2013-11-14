@@ -455,11 +455,11 @@ class VirtualMachine:
             self.registers[i]=(MemoryManager(4))
 
         # Initialize state registers
-        self.registers[10].store_int(pc, 0)
-        self.registers[11].store_int(MEM_SIZE, 0)
-        self.registers[12].store_int(stack_top, 0)
-        self.registers[13].store_int(MEM_SIZE, 0)
-        self.registers[14].store_int(MEM_SIZE, 0)
+        self.registers[10].store_int(pc, 0)  # PC
+        self.registers[11].store_int(MEM_SIZE, 0)  # SP
+        self.registers[12].store_int(stack_top, 0)  # ST
+        self.registers[13].store_int(MEM_SIZE, 0)  # SB
+        self.registers[14].store_int(MEM_SIZE, 0)  # FP
 
         self.function_map = {
             0: self.TRP,
