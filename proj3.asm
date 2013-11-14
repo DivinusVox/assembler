@@ -138,7 +138,7 @@ main    LDB     r0  at
         ADI     sp  #4  ; back to save return addy
         STR     r5  sp
         ADI     sp  #-4
-        JMP     flush
+        JMP     getdata
         LDB     r0  at
         TRP     3
         LDB     r0  line
@@ -409,6 +409,98 @@ endf    MOV     sp  fp  ; RETURN
         JMR     r0      ; go back
 
 ; END OF flush
+
+; START getdata
+
+getdata LDR     r6  SIZE ; no overflow needed
+        LDR     r5  cnt
+if2     MOV     r0  r5   ; disposable cnt
+        CMP     r0  r6
+        BLT     r0  true2
+
+else2   LDA     r1  big
+        LDB     r0  r1
+        TRP     3        ; 'N'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'u'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'm'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'b'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'e'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'r'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; ' '
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 't'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'o' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'o' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; ' ' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'B' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'i' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; 'g' 
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3        ; '\n' 
+; flush buffer
+        MOV     r5  sp  ; Calculate record size
+        ADI     r5  #-8
+        CMP     r5  st  ; Check for overflow
+        BLT     r5  odie
+        MOV     r6  fp  ; temp for PFP
+        MOV     fp  sp  ; set FP to next
+        ADI     sp  #-8 ; Leave space for return addy
+        STR     r6  sp  ; save pfp
+        MOV     r5  pc  ; Calculate return addy
+        ADI     r5  #60 ; Increment to line after jmp
+        ADI     sp  #4  ; back to save return addy
+        STR     r5  sp
+        ADI     sp  #-4
+        JMP     flush
+; Back
+        JMP     ret2
+
+true2   LDA     r1  c
+        TRP     4
+        ADD     r1  r5  ; c[cnt]
+        STB     r0  r1  ;  ^ = getchar()
+        ADI     r5  #1
+        STR     r5  cnt
+
+ret2    MOV     sp  fp  ; RETURN
+        MOV     r1  sp  ; Test for underflow
+        CMP     r1  sb
+        BGT     r1  udie  ; underflow
+        ADI     sp  #-4
+        LDR     r0  sp  ; retrieve return addy
+        ADI     sp  #-4
+        LDR     r1  sp  ; retrieve pfp
+        ADI     sp  #8
+        MOV     fp  r1  ; set FP to previous
+        JMR     r0      ; go back
+
+; END OF getdata
 
 ; START reset
 
