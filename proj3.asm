@@ -11,8 +11,17 @@ c        .byt    '0'
 data     .int    0
 flag     .int    0
 opdv     .int    0
-zeroc    .byt    '0'
-zeroi    .int    0
+nums     .byt    '0'
+         .byt    '1'
+         .byt    '2'
+         .byt    '3'
+         .byt    '4'
+         .byt    '5'
+         .byt    '6'
+         .byt    '7'
+         .byt    '8'
+         .byt    '9'
+zero     .int    0
 
 over     .byt   'O'
          .byt   'v'
@@ -32,6 +41,53 @@ under    .byt   'U'
          .byt   'l'
          .byt   'o'
          .byt   'w'
+
+nan      .byt   ' '
+         .byt   'i'
+         .byt   's'
+         .byt   ' '
+         .byt   'n'
+         .byt   'o'
+         .byt   't'
+         .byt   ' '
+         .byt   'a'
+         .byt   ' '
+         .byt   'n'
+         .byt   'u'
+         .byt   'm'
+         .byt   'b'
+         .byt   'e'
+         .byt   'r'
+         .byt   '\n'
+
+big      .byt   'N'
+         .byt   'u'
+         .byt   'm'
+         .byt   'b'
+         .byt   'e'
+         .byt   'r'
+         .byt   ' '
+         .byt   't'
+         .byt   'o'
+         .byt   'o'
+         .byt   ' '
+         .byt   'B'
+         .byt   'i'
+         .byt   'g'
+         .byt   '\n'
+
+opis     .byt   'O'
+         .byt   'p'
+         .byt   'e'
+         .byt   'r'
+         .byt   'a'
+         .byt   'n'
+         .byt   'd'
+         .byt   ' '
+         .byt   'i'
+         .byt   's'
+         .byt   ' '
+
 
 
 ; PRINT/COMPARISION CHARS
@@ -120,7 +176,130 @@ udie    LDA     r1  under
         TRP     3
         TRP     0
 
-flush   LDR     r1  zeroi
+opd     MOV     r5  sp  ; Need to calculate space req's
+        ADI     r5  #-4  ; 1 int
+        CMP     r5  st  ; Check for overflow
+        BLT     r5  odie
+        TRP     99
+        LDR     r0  zero
+        ADI     sp  #-4
+        STR     r0  sp  ; Initialize local t
+        ; Fetch j
+        ADI     sp  #4
+        LDB     r0  sp  ; Load for eval
+        ADI     sp  #-4 ; go back to local int
+if1     MOV     r1  r0  ; Disposable for testing
+        LDA     r3  nums
+        LDR     r2  r3 ; fetch '0'
+        CMP     r1  r2
+        BRZ     r1  case1a ; j == '0'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '1'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1b ; j == '1'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '2'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1c ; j == '2'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '3'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1d ; j == '3'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '4'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1e ; j == '4'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '5'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1f ; j == '5'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '6'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1g ; j == '6'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '7'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1h ; j == '7'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '8'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1i ; j == '8'
+        ADI     r3  #1
+        LDR     r2  r3  ; fetch '9'
+        MOV     r1  r0
+        CMP     r1  r2
+        BRZ     r1  case1j ; j == '9'
+else1   LDA     r1  nan
+        TRP     3       ; print num
+        LDB     r0  r1  ; print " is not a number\n"
+        TRP     3       ; ' '
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'i'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 's'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; ' '
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'n'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'o'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 't'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; ' '
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'a'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; ' '
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'n'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'u'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'm'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'b'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'e'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; 'r'
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3       ; '\n'
+        LDR     r0  zero
+        ADI     r0  #1
+        STR     r0  flag  ; flag = 1
+        JMP     ret1
+; Time for cases! Ugh
+case1a  
+
+ret1 ; go back!
+
+flush   LDR     r1  zero  ; No overflow test needed.
         STR     r1  data
         LDA     r5  c
         TRP     4
@@ -146,8 +325,8 @@ endf    MOV     sp  fp  ; RETURN
         JMR     r0      ; go back
 
 
-reset   LDB     r8  zeroc
-        LDR     r7  zeroi    ; counter
+reset   LDB     r8  nums
+        LDR     r7  zero    ; counter
         LDA     r2  c
 forr    LDR     r1  SIZE
         CMP     r1  r7
@@ -158,7 +337,7 @@ forr    LDR     r1  SIZE
         ADI     r7  #1
         JMP     forr
 endr    LDA     r2  c       ; test sequence for verification
-        LDR     r7  zeroi
+        LDR     r7  zero
 ford    LDR     r1 SIZE
         CMP     r1  r7
         BRZ     r1  endd
