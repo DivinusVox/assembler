@@ -356,15 +356,15 @@ if1b    LDR     r1  flag  ; if !flag
         LDR     r3  sp    ; fetch k from stack
         ADI     sp  #4
         LDR     r4  sp    ; fetch s from stack
-if1c    LDB     r0  plus  ; if s == '+'
+if1c    LDB     r0  pos  ; if s == '+'
         CMP     r0  r4
         BRZ     r0  kmul
 kneg    LDR     r0  #-1
         MUL     r3  r0    ; -k
 kmul    MUL     r2  r3
-        LDR     r0  opdy
-        ADD     r0  r2    ; opdy += t
-        STR     r0  opdy
+        LDR     r0  opdv
+        ADD     r0  r2    ; opdv += t
+        STR     r0  opdv
 
 ret1    MOV     sp  fp  ; RETURN
         MOV     r1  sp  ; Test for underflow
@@ -433,9 +433,9 @@ forr    LDR     r1  SIZE
 endr    ADI     sp  #20  ;data = w
         LDR     r0  sp
         STR     r0  data
-        ADI     sp  #-4  ;opdy = x
+        ADI     sp  #-4  ;opdv = x
         LDR     r0  sp
-        STR     r0  opdy
+        STR     r0  opdv
         ADI     sp  #-4  ;cnt = y
         LDR     r0  sp
         STR     r0  cnt
