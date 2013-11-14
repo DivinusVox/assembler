@@ -138,7 +138,110 @@ main    LDB     r0  at
         STR     r5  sp
         ADI     sp  #-4
         JMP     getdata
+        ; while (c[0] != '@')
+mwh1    LDA     r9  c
+        LDB     r1  r9
         LDB     r0  at
+        CMP     r0  r1
+        BRZ     r0  mewh1
+mif1    LDB     r0  pos  ; if (c[0] == '+') || c[0] == '-')
+        CMP     r0  r1
+        BRZ     mif1T
+        LDB     r0  neg
+        CMP     r0  r1
+        BRZ     mif1T    ; else
+        MOV     r8  r9
+        ADI     r8  #1
+        STB     r1  r8   ; c[1] = c[0]
+        LDB     r0  pos
+        STB     r0  r9   ; c[0] = '+'
+        LDR     r0  cnt
+        ADI     r0  #1   ; cnt++
+        STR     r0  cnt
+meif1   MOV     r1  r1   ; waste cycle
+mwh2    LDR     r1  data ; while (data)
+mif2    LDA     r9  c
+        LDR     r8  cnt
+        ADI     r8  #-1
+        LDB     r0  r8
+        LDB     r1  line
+        CMP     r0  r1
+        BNZ     r0  mif2T  ; if (c[cnt-1] == '\n')
+        ; else getdata()
+        MOV     r5  sp  ; Calculate record size
+        ADI     r5  #-8
+        CMP     r5  st  ; Check for overflow
+        BLT     r5  odie
+        MOV     r6  fp  ; temp for PFP
+        MOV     fp  sp  ; set FP to next
+        ADI     sp  #-8 ; Leave space for return addy
+        STR     r6  sp  ; save pfp
+        MOV     r5  pc  ; Calculate return addy
+        ADI     r5  #60 ; Increment to line after jmp
+        ADI     sp  #4  ; back to save return addy
+        STR     r5  sp
+        ADI     sp  #-4
+        JMP     getdata
+        meif2    MOV     r1  r1  ; endif 2
+                      ; endif
+            ; endwhile
+            ; reset(1, 0, 0, 0)
+            ; getdata()
+        JMP    mwh1
+mewh1   JMP    retmain  ; endwhile
+
+; getdata()
+mif1T   MOV     r5  sp  ; Calculate record size
+        ADI     r5  #-8
+        CMP     r5  st  ; Check for overflow
+        BLT     r5  odie
+        MOV     r6  fp  ; temp for PFP
+        MOV     fp  sp  ; set FP to next
+        ADI     sp  #-8 ; Leave space for return addy
+        STR     r6  sp  ; save pfp
+        MOV     r5  pc  ; Calculate return addy
+        ADI     r5  #60 ; Increment to line after jmp
+        ADI     sp  #4  ; back to save return addy
+        STR     r5  sp
+        ADI     sp  #-4
+        JMP     getdata
+        JMP     meif1
+
+mif2T   LDA     r1  data
+        LDR     r0  zero
+        STR     r0  r1   ; data = 0
+        ADI     r0  #1
+        LDA     r1  tenth
+        STR     r0  r1   ; tenth = 1
+        ADI     r0  #-3
+        LDR     r1  cnt
+        ADD     r1  r0
+        STR     r1  cnt  ; cnt -= 2
+mwh3    LDR     r1  zero ; while (!flag && cnt != 0)
+        LDR     r0  flag
+        CMP     r0  r1
+        BNZ     r0  mewh3
+        LDR     r0  cnt
+        CMP     r0  r1
+        BRZ     r0  mewh3
+            ; opd(c[0], tenth, c[cnt])
+        LDR     r0  cnt
+        ADI     r0  #-1
+        STR     r0  cnt   ; cnt--
+        LDR     r1  zero
+        ADI     r1  #10
+        LDR     r0  tenth ; tenth *= 10
+        MUL     r0  r1
+        STR     r0  tenth
+        JMP     mwh3
+mewh3   LDR     r1  zero ; endwhile
+        LDR     r0  flag
+        CMP     r0  r1   ; if (!flag)
+        BNZ     r0  meif3
+            ;printf("Operand is %d\n", opdv)
+meif3   JMP     meif2
+
+retmain LDB     r0  at
         TRP     3
         LDB     r0  line
         TRP     3
