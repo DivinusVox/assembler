@@ -384,26 +384,48 @@ endf    MOV     sp  fp  ; RETURN
 
 ; START reset
 
-reset   LDB     r8  nums
-        LDR     r7  zero    ; counter
+reset   MOV     r5  sp      ; test for overflow
+        ADI     r5  #-4      ; 1 int
+        CMP     r5  st
+        BLT     r5  odie
+        LDR     r0  zero    ; k = 0
+        ADI     sp  #-4
+        STR     r0  sp      ; save k
+        LDB     r8  zero
+        LDR     r7  sp    ; counter
         LDA     r2  c
 forr    LDR     r1  SIZE
         CMP     r1  r7
-        BRZ     r1  endr
+        BRZ     r1  endr  ; for k < SIZE (7)
         MOV     r0  r2
         ADD     r0  r7
         STR     r8  r0
         ADI     r7  #1
         JMP     forr
-endr    LDA     r2  c       ; test sequence for verification
-        LDR     r7  zero
-ford    LDR     r1 SIZE
-        CMP     r1  r7
-        BRZ     r1  endd
-        LDB     r0  r2
-        TRP     3
-        ADI     r7  #1
-        JMP     ford
-endd    JMP     back
+endr    ADI     sp  #20  ;data = w
+        LDR     r0  sp
+        STR     r0  data
+        ADI     sp  #-4  ;opdy = x
+        LDR     r0  sp
+        STR     r0  opdy
+        ADI     sp  #-4  ;cnt = y
+        LDR     r0  sp
+        STR     r0  cnt
+        ADI     sp  #-4  ;flag = z
+        LDR     r0  sp
+        STR     r0  flag
 
+        ; return sequence
+        MOV     sp  fp  ; RETURN
+        MOV     r1  sp  ; Test for underflow
+        CMP     r1  sb
+        BGT     r1  udie  ; underflow
+        ;TRP     99
+        ADI     sp  #-4
+        LDR     r0  sp  ; retrieve return addy
+        ADI     sp  #-4
+        LDR     r1  sp  ; retrieve pfp
+        ADI     sp  #8
+        MOV     fp  r1  ; set FP to previous
+        JMR     r0      ; go back
 
