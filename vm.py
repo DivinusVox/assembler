@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from __future__ import print_function
-import pdb
+import ipdb
 import re
 import sys
 
@@ -332,13 +332,13 @@ class VirtualMachine:
             2: self.getint,
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
             4: self.getchar,
-            99: pdb.set_trace
+            99: ipdb.set_trace
         }
         try:
             options[code]()
         except KeyError:
             raise UnknownTrapError('Code: ' + str(code) +
-                                   '. PC: ' + self.pc + '.')
+                                   '. PC: ' + str(self.registers[11].fetch_int(0)) + '.')
 
     def getint(self):
         if self.input_buffer == "":
