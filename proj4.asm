@@ -34,6 +34,24 @@ num     .byt    'E'
         .byt    't'
         .byt    ':'
         .byt    ' '
+
+xisy    .byt    'F'
+        .byt    'a'
+        .byt    'c'
+        .byt    't'
+        .byt    'o'
+        .byt    'r'
+        .byt    'i'
+        .byt    'a'
+        .byt    'l'
+        .byt    ' '
+        .byt    'o'
+        .byt    'f'
+        .byt    ' '
+        .byt    'i'
+        .byt    's'
+        .byt    ' '
+
 array   .int    0
         .int    0
         .int    0
@@ -113,6 +131,7 @@ main    LDA     r1  num ; print 'Enter an int: '
         LDR     r1  zero
         CMP     r1  r0
         BRZ     r1  end
+        MOV     r9  r0
         ;TRP     1      ; debugging print value
         ; fact(r0)
         MOV     r5  sp      ; Calculate record size
@@ -132,7 +151,61 @@ main    LDA     r1  num ; print 'Enter an int: '
         ADI     sp  #-8
         JMP     fact
         ADI     sp  #-4     ; fetch returned value
-        LDR     r0  sp
+        LDR     r8  sp
+        ADI     sp  #4      ; put the pointer back
+        LDA     r1  xisy    ; print 'Factorial of X is Y'
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        MOV     r0  r9
+        TRP     1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        ADI     r1  #1
+        LDB     r0  r1
+        TRP     3
+        MOV     r0  r8
         TRP     1
         LDB     r0  line
         TRP     3
