@@ -109,6 +109,10 @@ main    LDA     r1  num ; print 'Enter an int: '
         LDB     r0  r1
         TRP     3
         TRP     2      ; getint()
+        ; Test for 0 to break out
+        LDR     r1  zero
+        CMP     r1  r0
+        BRZ     r1  end
         ;TRP     1      ; debugging print value
         ; fact(r0)
         MOV     r5  sp      ; Calculate record size
@@ -130,6 +134,9 @@ main    LDA     r1  num ; print 'Enter an int: '
         ADI     sp  #-4     ; fetch returned value
         LDR     r0  sp
         TRP     1
+        LDB     r0  line
+        TRP     3
+        JMP     main        ; LOOP while input != 0
 
 
 end     LDB     r0  line
