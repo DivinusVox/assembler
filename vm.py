@@ -329,7 +329,7 @@ class VirtualMachine:
         options = {
             0: lambda : sys.exit(0), # fin.
             1: lambda : print(self.registers[0].fetch_int(0), end=""), # print int
-            #2: # read in int TODO
+            2: self.getint,
             3: lambda : print(chr(self.registers[0].fetch_char(3)), end=""), # print char
             4: self.getchar,
             99: pdb.set_trace
@@ -339,6 +339,14 @@ class VirtualMachine:
         except KeyError:
             raise UnknownTrapError('Code: ' + str(code) +
                                    '. PC: ' + self.pc + '.')
+
+    def getint(self):
+        if self.input_buffer == "":
+            self.input_buffer = raw_input()
+
+        result = int(self.input_buffer)
+        self.input_buffer = ""
+        self.registers[0].store_int(result, 0)
 
     def getchar(self):
         if self.input_buffer == "":
