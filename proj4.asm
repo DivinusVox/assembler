@@ -1,5 +1,6 @@
-zero     .int    0
-line    .byt    '\n'
+zero     .int   0
+line     .byt   '\n'
+comma    .byt   ','
 
 over     .byt   'O'
          .byt   'v'
@@ -84,6 +85,7 @@ array   .int    0
         .int    0   ; end of array[30]
 
 ; START main
+        LDA     r7  array
 main    LDA     r1  num ; print 'Enter an int: '
         LDB     r0  r1
         TRP     3
@@ -131,8 +133,9 @@ main    LDA     r1  num ; print 'Enter an int: '
         LDR     r1  zero
         CMP     r1  r0
         BRZ     r1  end
+        STR     r0  r7 ; save value into array
+        ADI     r7  #4
         MOV     r9  r0
-        ;TRP     1      ; debugging print value
         ; fact(r0)
         MOV     r5  sp      ; Calculate record size
         ADI     r5  #-12    ; 1 int, pfp, return add
@@ -152,6 +155,8 @@ main    LDA     r1  num ; print 'Enter an int: '
         JMP     fact
         ADI     sp  #-4     ; fetch returned value
         LDR     r8  sp
+        STR     r8  r7      ; save into array
+        ADI     r7  #4      ; increment array pointer
         ADI     sp  #4      ; put the pointer back
         LDA     r1  xisy    ; print 'Factorial of X is Y'
         LDB     r0  r1
@@ -212,7 +217,29 @@ main    LDA     r1  num ; print 'Enter an int: '
         JMP     main        ; LOOP while input != 0
 
 
-end     LDB     r0  line
+end     LDA     r1  array   ; start of array
+        MOV     r2  r7      ; end of array
+        ADI     r2  #-4
+aloop   LDR     r0  r1      ; fetch left array value
+        TRP     1
+        ADI     r1  #4      ; next left element
+        MOV     r0  r2
+        CMP     r0  r1      ; test for left passes right
+        BLT     r0  done
+        LDB     r0  comma
+        TRP     3
+        LDR     r0  r2      ; fetch right array value
+        TRP     1
+        ADI     r2  #-4     ; next right element
+        MOV     r0  r2
+        CMP     r0  r1      ; test for left passes right
+        BLT     r0  done
+        LDB     r0  comma
+        TRP     3
+        JMP     aloop
+
+
+done    LDB     r0  line
         TRP     3
         TRP     0
 ; END main
@@ -222,18 +249,15 @@ fact    MOV     r5  sp      ; test for overflow
         ADI     r5  #-4     ; 1 int
         CMP     r5  st
         BLT     r5  odie
-        ;TRP     99
         LDR     r0  sp      ; fetch n
         ;TRP     1           ; debugging print
 
         ; test for n == 0
-        ;TRP     99
         MOV     r2  r0
         LDR     r1  zero
         CMP     r2  r1
         BRZ     r2  base
         ; else, n * fact(n - 1)
-        ;TRP     99
         ADI     sp  #-4     ; make room for n
         STR     r0  sp      ; store n
         ; recurse
